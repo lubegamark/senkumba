@@ -49,7 +49,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
-ROOT_URLCONF = 'senkumba2.urls'
+ROOT_URLCONF = 'senkumba.urls'
 
 WSGI_APPLICATION = 'senkumba2.wsgi.application'
 

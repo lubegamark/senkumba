@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.admin import ModelAdmin
 
-from senkumba2.models import Payment, Share, Saving, Fine, Operation
+from senkumba.models import Payment, Share, Saving, Fine, Operation
 
 
 class PaymentsAdmin(ModelAdmin):
