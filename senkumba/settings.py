@@ -1,5 +1,5 @@
 """
-Django settings for senkumba2 project.
+Django settings for senkumba project.
 
 For more information on this file, see
 https://docs.djangoproject.com/en/1.7/topics/settings/
@@ -36,7 +36,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'senkumba2',
+    'senkumba',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -51,7 +51,7 @@ MIDDLEWARE_CLASSES = (
 
 ROOT_URLCONF = 'senkumba.urls'
 
-WSGI_APPLICATION = 'senkumba2.wsgi.application'
+WSGI_APPLICATION = 'senkumba.wsgi.application'
 
 
 # Database
