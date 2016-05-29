@@ -25,8 +25,8 @@ class Payment(Model):
     type = CharField(max_length=50, choices=TYPE_CHOICES)
     source = CharField(max_length=50, choices=SOURCE_CHOICES)
     amount = IntegerField()
-    comments = TextField()
-    date = DateField(blank=True, null=True)
+    comments = TextField(blank=True, null=True)
+    date = DateField()
     created = DateField(auto_now_add=True)
 
     def __str__(self):
