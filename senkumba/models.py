@@ -8,11 +8,15 @@ class Payment(Model):
     SAVINGS = 'savings'
     FINE = 'fine'
     OPERATIONS = 'operations'
+    REGISTRATION = 'registration'
+    OTHER = 'other'
     TYPE_CHOICES = (
         (SHARES, 'Share'),
         (SAVINGS, 'Saving'),
         (FINE, 'Fine'),
         (OPERATIONS, 'Operation'),
+        (REGISTRATION, 'Registration'),
+        (OTHER, 'Other'),
 
     )
     CASH = 'cash'
@@ -50,6 +54,14 @@ class Payment(Model):
             fines = Fine.objects.get_or_create(user=self.user)[0]
             fines.amount += self.amount
             fines.save()
+        elif self.type == self.REGISTRATION:
+            registration = Registration.objects.get_or_create(user=self.user)[0]
+            registration.amount += self.amount
+            registration.save()
+        elif self.type == self.OTHERS:
+            others = Other.objects.get_or_create(user=self.user)[0]
+            others.amount += self.amount
+            others.save()
 
         if self.date == None:
             self.date = timezone.now()
@@ -86,6 +98,22 @@ class Fine(Model):
 
 class Operation(Model):
     user = ForeignKey(User, related_name='operations')
+    amount = IntegerField(default=0)
+
+    def __str__(self):
+        return self.user.__str__()
+
+
+class Registration(Model):
+    user = ForeignKey(User, related_name='registration')
+    amount = IntegerField(default=0)
+
+    def __str__(self):
+        return self.user.__str__()
+
+
+class Other(Model):
+    user = ForeignKey(User, related_name='others')
     amount = IntegerField(default=0)
 
     def __str__(self):
