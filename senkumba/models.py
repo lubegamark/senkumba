@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
-from django.db.models import Model, DateField, ForeignKey, CharField, TextField, IntegerField
+from django.db.models import Model, DateField, ForeignKey, CharField, TextField, IntegerField, DateTimeField, Sum, \
+    ManyToManyField, FloatField, BooleanField
 from django.utils import timezone
 
 
@@ -31,38 +32,18 @@ class Payment(Model):
     amount = IntegerField()
     comments = TextField(blank=True, null=True)
     date = DateField()
-    created = DateField(auto_now_add=True)
+    start = DateField(blank=True, null=True)
+    end = DateField(blank=True, null=True)
+    created = DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.user.__str__()
 
-    def _make_payment(self):
-        if self.type == self.SHARES:
-            shares = Share.objects.get_or_create(user=self.user)[0]
-            print(shares.amount)
-            shares.amount += self.amount
-            shares.save()
-        elif self.type == self.SAVINGS:
-            savings = Saving.objects.get_or_create(user=self.user)[0]
-            savings.amount += self.amount
-            savings.save()
-        elif self.type == self.OPERATIONS:
-            operations = Operation.objects.get_or_create(user=self.user)[0]
-            operations.amount += self.amount
-            operations.save()
-        elif self.type == self.FINE:
-            fines = Fine.objects.get_or_create(user=self.user)[0]
-            fines.amount += self.amount
-            fines.save()
-        elif self.type == self.REGISTRATION:
-            registration = Registration.objects.get_or_create(user=self.user)[0]
-            registration.amount += self.amount
-            registration.save()
-        elif self.type == self.OTHERS:
-            others = Other.objects.get_or_create(user=self.user)[0]
-            others.amount += self.amount
-            others.save()
+    def period(self):
 
+        return self.start.strftime("%b %Y") if self.start else None
+
+    def _make_payment(self):
         if self.date == None:
             self.date = timezone.now()
             self.save()
@@ -72,49 +53,47 @@ class Payment(Model):
         self._make_payment()
 
 
-class Share(Model):
-    user = ForeignKey(User, related_name='shares')
-    amount = IntegerField(default=0)
+class ExpenseCategory(Model):
+    name = CharField(max_length=255)
+    description = TextField()
+
+    def __str__(self):
+        return self.name
+
+
+class Expense(Model):
+    user = ForeignKey(User, related_name='expenses')
+    type = ForeignKey('ExpenseCategory', )
+    amount = IntegerField()
+    comments = TextField(blank=True, null=True)
+    date = DateField()
+    created = DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.user.__str__()
 
 
-class Saving(Model):
-    user = ForeignKey(User, related_name='savings')
-    amount = IntegerField(default=0)
+class LoanCategory(Model):
+    name = CharField(max_length=255)
+    description = TextField()
 
     def __str__(self):
-        return self.user.__str__()
+        return self.name
 
 
-class Fine(Model):
-    user = ForeignKey(User, related_name='fines')
-    amount = IntegerField(default=0)
-
-    def __str__(self):
-        return self.user.__str__()
-
-
-class Operation(Model):
-    user = ForeignKey(User, related_name='operations')
-    amount = IntegerField(default=0)
-
-    def __str__(self):
-        return self.user.__str__()
-
-
-class Registration(Model):
-    user = ForeignKey(User, related_name='registration')
-    amount = IntegerField(default=0)
-
-    def __str__(self):
-        return self.user.__str__()
-
-
-class Other(Model):
-    user = ForeignKey(User, related_name='others')
-    amount = IntegerField(default=0)
+class Loan(Model):
+    user = ForeignKey(User, related_name='loans')
+    type = ForeignKey('LoanCategory', )
+    amount = IntegerField()
+    comments = TextField(blank=True, null=True)
+    date = DateField()
+    start = DateField()
+    end = DateField()
+    interest = FloatField(help_text='per month')
+    guaranteed_by = ManyToManyField(User, null=True, blank=True, related_name='loans_guaranteed')
+    approved_by = ManyToManyField(User, 'loans_approved')
+    approved = BooleanField()
+    created = DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.user.__str__()
