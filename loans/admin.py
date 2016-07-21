@@ -1,14 +1,15 @@
 from django.contrib import admin
 from django.contrib.admin import ModelAdmin
 
-from loans.models import LoanApplication, Loan, LoanCategory, InterestType, Period, LoanApplicationStatus, \
-    LoanStatus, LoanPayment
+from loans.models import LoanApplication, Loan, LoanCategory, InterestType, LoanApplicationStatus, \
+    LoanStatus, LoanPayment, Period
 
 
 class LoansAdmin(ModelAdmin):
     list_display = ('id', 'user', 'start', 'expected_end', 'end', 'type', 'amount', 'status', 'approval_date')
     ordering = ('-approval_date', '-created', 'id')
     search_fields = ('date', 'user', 'type')
+    readonly_fields = ('summary',)
 
 
 class LoanApplicationsAdmin(ModelAdmin):

@@ -1,6 +1,7 @@
 """
 Models Dealing with Loans
 """
+from datetime import timedelta
 
 from django.contrib.auth.models import User
 from django.db.models import Model, CharField, TextField, IntegerField, ForeignKey, ManyToManyField, BooleanField, \
@@ -53,8 +54,15 @@ class Period(Model):
 
 
 class InterestType(Model):
+    SIMPLE = 'simple'
+    COMPOUND = 'compound'
+    TYPE_CHOICES = (
+        (SIMPLE, 'Simple'),
+        (COMPOUND, 'Compound')
+    )
     name = CharField(max_length=255)
     period = ForeignKey(Period)
+    type = CharField(max_length=255, choices=TYPE_CHOICES)
     description = TextField()
 
     def __str__(self):
@@ -92,18 +100,45 @@ class Loan(Model):
     type = ForeignKey(LoanCategory)
     comments = TextField(blank=True, null=True)
     approval_date = DateField()
-    interest = FloatField()
+    interest_rate = FloatField()
     interest_type = ForeignKey(InterestType, related_name='loans')
+    time = IntegerField()
     guaranteed_by = ManyToManyField(User, blank=True, related_name='loans_guaranteed')
-    amount = IntegerField(blank=True, null=True)
-    start = DateField(blank=True, null=True)
-    expected_end = DateField()
+    amount = IntegerField()
+    start = DateField()
     end = DateField(blank=True, null=True)
     status = ForeignKey(LoanStatus)
     created = DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return "{0} Loan #{1}".format(self.user.__str__(), self.id)
+
+    def total_amount(self):
+        return self.amount+self.interest_amount()
+
+    def principal(self):
+        return self.amount
+
+    def interest_amount(self):
+        if self.interest_type.type == InterestType.SIMPLE:
+            return self.amount*(self.interest_rate/100)*self.time
+        else:
+            #TODO implement Compound Interest
+            return self.amount*(self.interest_rate/100)*self.time
+
+    def expected_end(self):
+        time_in_days = self.time*self.interest_type.period.days
+        return self.start + timedelta(days=time_in_days)
+
+    def summary(self):
+        return """Amount:         {0}
+        Principal:      {1}
+        Interest amount:{2}
+        Interest rate:  {3}% per {5}
+        Time:           {4} {5}s
+        Expected end:   {6}
+        """.format(self.total_amount(), self.amount, self.interest_amount(), self.interest_rate, self.time,
+                   self.interest_type.period, self.expected_end())
 
 
 class LoanPayment(Model):
