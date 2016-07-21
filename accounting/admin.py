@@ -3,7 +3,8 @@ from django.contrib.admin import ModelAdmin
 from django.contrib.auth.models import User
 from django.db.models import Sum
 
-from senkumba.models import Payment, Expense, Loan
+from accounting.models import Payment
+from accounting.models import Expense
 
 
 class PaymentsAdmin(ModelAdmin):
@@ -17,13 +18,6 @@ class PaymentsAdmin(ModelAdmin):
 class ExpensesAdmin(ModelAdmin):
     list_display = ('id', 'user', 'type', 'amount', 'date', 'comments', 'created',)
     list_filter = ('user','type', 'created', 'date', )
-    ordering = ('-date', '-created', 'id')
-    search_fields = ('date', 'user')
-
-
-class LoansAdmin(ModelAdmin):
-    list_display = ('id', 'user', 'type', 'amount', 'date', 'comments', 'created',)
-    list_filter = ('user','type', 'created',  'date', )
     ordering = ('-date', '-created', 'id')
     search_fields = ('date', 'user')
 
@@ -113,9 +107,9 @@ class OperationsAdmin(ModelAdmin):
 
 
 admin.site.register(Payment, PaymentsAdmin)
-admin.site.register(Loan, LoansAdmin)
 admin.site.register(Expense, ExpensesAdmin)
 admin.site.register(SharesSummary, SharesAdmin)
 admin.site.register(SavingsSummary, SavingsAdmin)
 admin.site.register(FinesSummary, FinesAdmin)
 admin.site.register(OperationsSummary, OperationsAdmin)
+
