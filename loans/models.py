@@ -5,7 +5,8 @@ from datetime import timedelta
 
 from django.contrib.auth.models import User
 from django.db.models import Model, CharField, TextField, IntegerField, ForeignKey, ManyToManyField, BooleanField, \
-    DateTimeField, FloatField, DateField, OneToOneField
+    DateTimeField, FloatField, DateField, OneToOneField, Sum
+from django.db.models.functions import Coalesce
 
 
 class LoanCategory(Model):
@@ -132,6 +133,12 @@ class Loan(Model):
         time_in_days = self.time*self.interest_type.period.days
         return self.start + timedelta(days=time_in_days)
 
+    def amount_paid(self):
+        return self.payments.aggregate(total=Coalesce(Sum('amount'), 0))['total']
+
+    def amount_left(self):
+        return self.amount - self.amount_paid()
+
     def summary(self):
         return """Amount:         {0}
         Principal:      {1}
@@ -140,8 +147,11 @@ class Loan(Model):
         Interest type:  {7}
         Time:           {4} {5}s
         Expected end:   {6}
+        Amount Paid:   {8}
+        Amount left:   {9}
         """.format(self.total_amount(), self.amount, self.interest_amount(), self.interest_rate, self.time,
-                   self.interest_type.period, self.expected_end(), self.interest_type.type)
+                   self.interest_type.period, self.expected_end(), self.interest_type.type, self.amount_paid(),
+                   self.amount_left())
 
 
 class LoanPayment(Model):
