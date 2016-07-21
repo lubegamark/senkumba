@@ -6,7 +6,7 @@ from loans.models import LoanApplication, Loan, LoanCategory, InterestType, Loan
 
 
 class LoansAdmin(ModelAdmin):
-    list_display = ('id', 'user', 'start', 'expected_end', 'end', 'type', 'amount', 'status', 'approval_date')
+    list_display = ('id', 'user', 'start', 'expected_end',  'type', 'amount', 'status', 'approval_date')
     ordering = ('-approval_date', '-created', 'id')
     search_fields = ('date', 'user', 'type')
     readonly_fields = ('summary',)

@@ -103,6 +103,7 @@ class Loan(Model):
     interest_rate = FloatField()
     interest_type = ForeignKey(InterestType, related_name='loans')
     time = IntegerField()
+    compound = IntegerField(help_text='number of compounding periods')
     guaranteed_by = ManyToManyField(User, blank=True, related_name='loans_guaranteed')
     amount = IntegerField()
     start = DateField()
@@ -114,17 +115,18 @@ class Loan(Model):
         return "{0} Loan #{1}".format(self.user.__str__(), self.id)
 
     def total_amount(self):
-        return self.amount+self.interest_amount()
+        if self.interest_type.type == InterestType.COMPOUND:
+            nt = self.compound*self.time
+            interest_decimal = self.interest_rate/100
+            return self.amount*((1 + interest_decimal/self.compound)**nt)
+        else:
+            return self.amount+(self.amount*(self.interest_rate/100)*self.time)
 
     def principal(self):
         return self.amount
 
     def interest_amount(self):
-        if self.interest_type.type == InterestType.SIMPLE:
-            return self.amount*(self.interest_rate/100)*self.time
-        else:
-            #TODO implement Compound Interest
-            return self.amount*(self.interest_rate/100)*self.time
+        return self.total_amount() - self.amount
 
     def expected_end(self):
         time_in_days = self.time*self.interest_type.period.days
@@ -135,10 +137,11 @@ class Loan(Model):
         Principal:      {1}
         Interest amount:{2}
         Interest rate:  {3}% per {5}
+        Interest type:  {7}
         Time:           {4} {5}s
         Expected end:   {6}
         """.format(self.total_amount(), self.amount, self.interest_amount(), self.interest_rate, self.time,
-                   self.interest_type.period, self.expected_end())
+                   self.interest_type.period, self.expected_end(), self.interest_type.type)
 
 
 class LoanPayment(Model):
