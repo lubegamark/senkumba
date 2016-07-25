@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from django.db.models import Model, CharField, TextField, IntegerField, ForeignKey, ManyToManyField, BooleanField, \
     DateTimeField, FloatField, DateField, OneToOneField, Sum
 from django.db.models.functions import Coalesce
+from django.utils import timezone
 
 
 class LoanCategory(Model):
@@ -115,19 +116,28 @@ class Loan(Model):
     def __str__(self):
         return "{0} Loan #{1}".format(self.user.__str__(), self.id)
 
+    def late(self):
+        if self.expected_end() < timezone.now().date():
+            return True
+        else:
+            return False
+
     def total_amount(self):
         if self.interest_type.type == InterestType.COMPOUND:
             nt = self.compound*self.time
             interest_decimal = self.interest_rate/100
-            return self.amount*((1 + interest_decimal/self.compound)**nt)
+            return self.principal()*((1 + interest_decimal/self.compound)**nt)
         else:
-            return self.amount+(self.amount*(self.interest_rate/100)*self.time)
+            return self.principal()+(self.principal()*(self.interest_rate/100)*self.time)
 
     def principal(self):
-        return self.amount
+        if self.late():
+            return self.amount
+        else:
+            return self.amount
 
     def interest_amount(self):
-        return self.total_amount() - self.amount
+        return self.total_amount() - self.principal()
 
     def expected_end(self):
         time_in_days = self.time*self.interest_type.period.days
@@ -137,7 +147,7 @@ class Loan(Model):
         return self.payments.aggregate(total=Coalesce(Sum('amount'), 0))['total']
 
     def amount_left(self):
-        return self.amount - self.amount_paid()
+        return self.principal() - self.amount_paid()
 
     def summary(self):
         return """Amount:         {0}
@@ -149,9 +159,10 @@ class Loan(Model):
         Expected end:   {6}
         Amount Paid:   {8}
         Amount left:   {9}
+        Late:   {10}
         """.format(self.total_amount(), self.amount, self.interest_amount(), self.interest_rate, self.time,
                    self.interest_type.period, self.expected_end(), self.interest_type.type, self.amount_paid(),
-                   self.amount_left())
+                   self.amount_left(), self.late())
 
 
 class LoanPayment(Model):
